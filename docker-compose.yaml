@@ -1,0 +1,32 @@
+services:
+  cache-db:
+    image: redis:7.2.5-alpine
+    container_name: cache-redis-db
+    restart: always
+    ports:
+      - 6379:6379
+    mem_limit: 512mb
+    volumes:
+      - ./compose/data/cache:/data
+    networks:
+      - localnet
+
+  sql-db:
+    image: postgres:18-alpine3.22
+    container_name: sql-postgre-db
+    restart: always
+    ports:
+      - 5432:5432
+    mem_limit: 1Gb
+    volumes:
+      - ./compose/data/sql:/var/lib/postgres/data
+    environment:
+      - POSTGRES_DB=vivasabor
+      - POSTGRES_USER=viva-sabor
+      - POSTGRES_PASSWORD=Viva_Sabor@123
+    networks:
+      - localnet
+
+networks:
+  localnet:
+    driver: bridge
