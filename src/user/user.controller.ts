@@ -10,15 +10,15 @@ export class UserController {
 
   @Get('/me')
   async findMe(): Promise<UserProfileDto> {
-    return await this.userService.findMe();
+    return await this.userService.findMe()!;
   }
 
   @Get('/me/history')
   async findMyHistory(): Promise<UserHistoryDto> {
-    return await this.userService.findMyHistory();
+    return await this.userService.findMyHistory()!;
   }
   @Get('/me/favorites')
   async findMyFavorites(): Promise<UserFavoritesDto> {
-    return await this.userService.findMyFavorites();
+    return await this.userService.findMyFavorites()!;
   }
 }

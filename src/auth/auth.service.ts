@@ -1,26 +1,24 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { AuthRepository } from './auth.repository';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { SignedDto } from './dto/signed.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/user.entity';
+import { compare, hashSync } from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private readonly authRepository: AuthRepository,
+    // @InjectRepository(User)
+    // private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
   ) {}
 
   async signUp(requestBody: SignUpDto): Promise<SignedDto> {
-    let user: User | undefined = await this.authRepository.findOneByEmail(
-      requestBody.email,
+    const authRepository: User[] = [];
+
+    let user: User | undefined = authRepository.find(
+      (user) => user.email === requestBody.email,
     );
 
     if (user !== undefined) {
@@ -29,28 +27,31 @@ export class AuthService {
 
     const encodedPassword = hashSync(
       requestBody.password,
-      process.env.ENCRYPT_SALT,
+      process.env.ENCRYPT_SALT!,
     );
 
     user = new User(requestBody, encodedPassword);
 
-    user = await this.authRepository.create(user);
-    await this.authRepository.save(user);
+    // user = await this.authRepository.create(user);
+    // this.authRepository.save(user);
+    authRepository.push(user);
 
     return {
       id: user.id,
       name: user.name,
-      token: this.generateBearerToken(user.id, user.email),
+      token: await this.generateBearerToken(user.id, user.email),
     };
   }
 
   async signIn(requestBody: SignInDto): Promise<SignedDto> {
-    const user: User | undefined = await this.authRepository.findOneByEmail(
-      requestBody.email,
+    const authRepository: User[] = [];
+
+    const user: User | undefined = authRepository.find(
+      (user) => user.email === requestBody.email,
     );
 
     if (user === undefined) {
-      throw new UnauthorizedException('Wrong credentials');
+      throw new BadRequestException('Wrong credentials');
     }
 
     const passwordMatches: boolean = await compare(
@@ -59,7 +60,7 @@ export class AuthService {
     );
 
     if (!passwordMatches) {
-      throw new UnauthorizedException('Wrong credentials');
+      throw new BadRequestException('Wrong credentials');
     }
 
     return {
@@ -78,7 +79,7 @@ export class AuthService {
       username: email,
     };
 
-    const token = await this.jwtService.verifyAsync(jwtPayload);
+    const token = await this.jwtService.signAsync(jwtPayload);
 
     return `Bearer ${token}`;
   }

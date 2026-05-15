@@ -13,12 +13,12 @@ export class EntriesController {
   async findAll(
     @Query() requestQuery: SearchQueryDto,
   ): Promise<Page<BriefEntryDto>> {
-    return await this.entriesService.findAll(requestQuery);
+    return await this.entriesService.findAll(requestQuery)!;
   }
 
   @Get('/en/:word')
   async findOne(@Param('word') word: string): Promise<EntryDto> {
-    return await this.entriesService.findOne(word);
+    return await this.entriesService.findOne(word)!;
   }
 
   @Post('/en/:word/favorite')

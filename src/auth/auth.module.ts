@@ -8,7 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET ?? 'LexiCOM-API-WeakDefaultSecret',
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+      signOptions: { expiresIn: Number(process.env.JWT_EXPIRES_IN) },
     }),
   ],
   controllers: [AuthController],
