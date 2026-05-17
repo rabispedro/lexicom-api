@@ -3,25 +3,27 @@ import { SignedDto } from './dto/signed.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './entities/user.entity';
 import { compare, hashSync } from 'bcrypt';
+import { SessionUser } from './entities/session-user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
   constructor(
-    // @InjectRepository(User)
-    // private readonly authRepository: AuthRepository,
+    @InjectRepository(SessionUser)
+    private readonly authRepository: Repository<SessionUser>,
     private readonly jwtService: JwtService,
   ) {}
 
   async signUp(requestBody: SignUpDto): Promise<SignedDto> {
-    const authRepository: User[] = [];
+    let sessionUser = await this.authRepository.findOneBy({
+      user: {
+        email: requestBody.email,
+      },
+    });
 
-    let user: User | undefined = authRepository.find(
-      (user) => user.email === requestBody.email,
-    );
-
-    if (user !== undefined) {
+    if (sessionUser !== null) {
       throw new BadRequestException('User already exists');
     }
 
@@ -30,32 +32,30 @@ export class AuthService {
       process.env.ENCRYPT_SALT!,
     );
 
-    user = new User(requestBody, encodedPassword);
+    sessionUser = new SessionUser(requestBody, encodedPassword);
+    await this.authRepository.save(sessionUser);
 
-    // user = await this.authRepository.create(user);
-    // this.authRepository.save(user);
-    authRepository.push(user);
+    const token = await this.generateBearerToken(
+      sessionUser.id,
+      sessionUser.user!.email,
+    );
 
-    return {
-      id: user.id,
-      name: user.name,
-      token: await this.generateBearerToken(user.id, user.email),
-    };
+    return new SignedDto(sessionUser, token);
   }
 
   async signIn(requestBody: SignInDto): Promise<SignedDto> {
-    const authRepository: User[] = [];
+    const sessionUser = await this.authRepository.findOneBy({
+      user: {
+        email: requestBody.email,
+      },
+    });
 
-    const user: User | undefined = authRepository.find(
-      (user) => user.email === requestBody.email,
-    );
-
-    if (user === undefined) {
+    if (sessionUser === null) {
       throw new BadRequestException('Wrong credentials');
     }
 
     const passwordMatches: boolean = await compare(
-      user.password,
+      sessionUser.user!.password,
       requestBody.password,
     );
 
@@ -63,11 +63,12 @@ export class AuthService {
       throw new BadRequestException('Wrong credentials');
     }
 
-    return {
-      id: user.id,
-      name: user.name,
-      token: await this.generateBearerToken(user.id, user.email),
-    };
+    const token = await this.generateBearerToken(
+      sessionUser.id,
+      sessionUser.user!.email,
+    );
+
+    return new SignedDto(sessionUser, token);
   }
 
   private async generateBearerToken(

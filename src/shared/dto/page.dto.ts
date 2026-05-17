@@ -5,4 +5,9 @@ export class Page<T> {
   next: string = '';
   hasNext: boolean = false;
   hasPrev: boolean = false;
+
+  constructor(entries: T[], cursor: string) {
+    this.results = entries;
+    this.next = cursor;
+  }
 }

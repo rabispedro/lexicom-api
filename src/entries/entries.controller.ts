@@ -4,6 +4,7 @@ import { SearchQueryDto } from './dto/search-query.dto';
 import { Page } from 'src/shared/dto/page.dto';
 import { EntryDto } from './dto/entry.dto';
 import { BriefEntryDto } from './dto/brief-entry.dto';
+// import { Public } from 'src/shared/metadata/public-route.metadata';
 
 @Controller('entries')
 export class EntriesController {
@@ -15,6 +16,12 @@ export class EntriesController {
   ): Promise<Page<BriefEntryDto>> {
     return await this.entriesService.findAll(requestQuery)!;
   }
+
+  // @Public()
+  // @Get('/en/top')
+  // async findTop(): Promise<Page<BriefEntryDto>> {
+  //   return await this.entriesService.findTop()!;
+  // }
 
   @Get('/en/:word')
   async findOne(@Param('word') word: string): Promise<EntryDto> {

@@ -6,15 +6,49 @@ import { EntriesModule } from './entries/entries.module';
 import { UserModule } from './user/user.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './shared/guard/auth.guard';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './user/entities/user.entity';
+import { Entry } from './entries/entities/entry.entity';
+import { SessionUser } from './auth/entities/session-user.entity';
 
 @Module({
-  imports: [AuthModule, EntriesModule, UserModule],
+  imports: [
+    AuthModule,
+    EntriesModule,
+    UserModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: 'default',
+          ttl: 10000,
+          limit: 20,
+        },
+      ],
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.SQL_HOST,
+      port: Number(process.env.SQL_PORT) ?? 5432,
+      username: process.env.SQL_USER,
+      password: process.env.SQL_PASSWORD,
+      database: process.env.SQL_DB,
+      entities: [SessionUser, Entry, User],
+      autoLoadEntities: true,
+      migrations: [`../migrations/*{.js,.ts}`],
+      migrationsRun: true,
+    }),
+  ],
   controllers: [AppController],
   providers: [
     AppService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

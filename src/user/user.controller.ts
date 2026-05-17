@@ -3,6 +3,8 @@ import { UserService } from './user.service';
 import { UserProfileDto } from './dto/user-profile.dto';
 import { UserHistoryDto } from './dto/user-history.dto';
 import { UserFavoritesDto } from './dto/user-favorites.dto';
+import { EntryDto } from 'src/entries/dto/entry.dto';
+import { Page } from 'src/shared/dto/page.dto';
 
 @Controller('user')
 export class UserController {
@@ -14,11 +16,11 @@ export class UserController {
   }
 
   @Get('/me/history')
-  async findMyHistory(): Promise<UserHistoryDto> {
+  async findMyHistory(): Promise<Page<EntryDto>> {
     return await this.userService.findMyHistory()!;
   }
   @Get('/me/favorites')
-  async findMyFavorites(): Promise<UserFavoritesDto> {
+  async findMyFavorites(): Promise<Page<EntryDto>> {
     return await this.userService.findMyFavorites()!;
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserProfileDto } from './dto/user-profile.dto';
-import { UserHistoryDto } from './dto/user-history.dto';
-import { UserFavoritesDto } from './dto/user-favorites.dto';
+import { EntryDto } from 'src/entries/dto/entry.dto';
+import { Page } from 'src/shared/dto/page.dto';
 
 @Injectable()
 export class UserService {
@@ -11,10 +11,10 @@ export class UserService {
     return undefined;
   }
 
-  findMyHistory(): Promise<UserHistoryDto> | undefined {
+  findMyHistory(): Promise<Page<EntryDto>> | undefined {
     return undefined;
   }
-  findMyFavorites(): Promise<UserFavoritesDto> | undefined {
+  findMyFavorites(): Promise<Page<EntryDto>> | undefined {
     return undefined;
   }
 }
