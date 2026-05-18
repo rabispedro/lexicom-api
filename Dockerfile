@@ -1,16 +1,16 @@
-FROM Node.js:26-alpine3.23-dev AS BUILD
+FROM node:jod-alpine3.23 AS BUILD
 
 WORKDIR /app
 
-COPY .env.local .
-COPY src ./src
-COPY test ./test
+COPY .env.local package.json .prettierrc eslint.config.mjs nest-cli.json tsconfig.build.json tsconfig.json ./
+COPY src .
+# COPY test ./test
 
 RUN npm i
 
 CMD ["npm", "run", "build"]
 
-FROM Node.js:26-alpine3.23-dev AS RUN
+FROM node:jod-alpine3.23 AS RUN
 
 EXPOSE 3333
 

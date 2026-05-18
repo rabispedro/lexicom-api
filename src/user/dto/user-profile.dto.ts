@@ -17,7 +17,7 @@ export class UserProfileDto {
   constructor(user: User) {
     this.id = user.id;
     this.email = user.email;
-    this.favoritesSize = user.favorites.length;
-    this.historySize = user.history.length;
+    this.favoritesSize = user.favorites?.length ?? 0;
+    this.historySize = user.history?.length ?? 0;
   }
 }

@@ -7,19 +7,19 @@ import { SourceUrl } from './source-url.entity';
 
 @Entity('entry')
 export class Entry {
-  @PrimaryColumn('id')
+  @PrimaryColumn()
   id: string = IdGenerator.generate();
 
   @Column()
-  word: string = '';
+  word?: string;
 
   @Column()
-  phonetic: string = '';
+  phonetic?: string;
 
   @OneToMany(() => Phonetic, (phonetic) => phonetic.entry, {
     cascade: true,
   })
-  phonetics: Phonetic[] = [];
+  phonetics?: Phonetic[];
 
   @Column()
   origin?: string;
@@ -35,9 +35,9 @@ export class Entry {
   @OneToMany(() => SourceUrl, (sourceUrl) => sourceUrl.entry, {
     cascade: true,
   })
-  sourceUrls: SourceUrl[] = [];
+  sourceUrls?: SourceUrl[];
 
-  @Column({ name: 'accesses', nullable: false })
+  @Column({ name: 'accesses', nullable: true })
   accesses: number = 0;
 
   accessed() {

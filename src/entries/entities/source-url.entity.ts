@@ -8,7 +8,7 @@ export class SourceUrl {
   id: string = IdGenerator.generate();
 
   @Column({ name: 'value', nullable: true })
-  value: string = '';
+  value?: string;
 
   @ManyToOne(() => Entry, (entry) => entry.sourceUrls)
   entry?: Entry;

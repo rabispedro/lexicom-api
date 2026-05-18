@@ -7,12 +7,17 @@ import { compare, hashSync } from 'bcrypt';
 import { SessionUser } from './entities/session-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(SessionUser)
     private readonly authRepository: Repository<SessionUser>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
     private readonly jwtService: JwtService,
   ) {}
 
@@ -32,21 +37,34 @@ export class AuthService {
       process.env.ENCRYPT_SALT!,
     );
 
-    sessionUser = new SessionUser(requestBody, encodedPassword);
+    sessionUser = new SessionUser();
+    const user = new User(
+      sessionUser.id,
+      requestBody.name,
+      requestBody.email,
+      encodedPassword,
+    );
+    sessionUser.user = user;
     await this.authRepository.save(sessionUser);
+    await this.userRepository.save(user);
 
     const token = await this.generateBearerToken(
       sessionUser.id,
-      sessionUser.user!.email,
+      requestBody.email,
     );
 
     return new SignedDto(sessionUser, token);
   }
 
   async signIn(requestBody: SignInDto): Promise<SignedDto> {
-    const sessionUser = await this.authRepository.findOneBy({
-      user: {
-        email: requestBody.email,
+    const sessionUser = await this.authRepository.findOne({
+      relations: {
+        user: true,
+      },
+      where: {
+        user: {
+          email: requestBody.email,
+        },
       },
     });
 
@@ -55,8 +73,8 @@ export class AuthService {
     }
 
     const passwordMatches: boolean = await compare(
-      sessionUser.user!.password,
       requestBody.password,
+      sessionUser.user!.password,
     );
 
     if (!passwordMatches) {
@@ -78,6 +96,7 @@ export class AuthService {
     const jwtPayload = {
       sub: id,
       username: email,
+      expiresIn: 600,
     };
 
     const token = await this.jwtService.signAsync(jwtPayload);

@@ -29,28 +29,20 @@ services:
     networks:
       - localnet
 
-  # app:
-  #   build: .
-  #   container_name: app
-  #   restart: always
-  #   depends_on:
-  #     - cache-redis-db
-  #     - sql-postgre-db
-  #   env_file:
-  #     - path: .env.local
-  #       required: true
-  #   ports:
-  #     - ${API_PORT}:3333
-  #   mem_limit: 2Gb
-  #   # volumes:
-  #   #   - ./compose/data/app:/var/lib/postgres/data
-  #   environment:
-  #     - FRONTEND_ORIGIN=${FRONTEND_ORIGIN}
-  #     - ENCRYPT_SALT=${ENCRYPT_SALT}
-  #     - JWT_SECRET=${JWT_SECRET}
-  #     - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-  #   networks:
-  #     - localnet
+  app:
+    build: .
+    container_name: app
+    # restart: always
+    depends_on:
+      - cache-db
+      - sql-db
+    ports:
+      - 3333:3333
+    mem_limit: 2Gb
+    volumes:
+      - ./compose/data/app:/app
+    networks:
+      - localnet
 
 networks:
   localnet:

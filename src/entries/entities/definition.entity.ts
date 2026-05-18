@@ -21,10 +21,10 @@ export class Definition {
   @OneToMany(() => Synonym, (synonym) => synonym.definition, {
     cascade: true,
   })
-  synonyms: Synonym[] = [];
+  synonyms?: Synonym[];
 
   @OneToMany(() => Antonym, (antonym) => antonym.definition, {
     cascade: true,
   })
-  antonyms: Antonym[] = [];
+  antonyms?: Antonym[];
 }

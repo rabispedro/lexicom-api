@@ -7,8 +7,8 @@ export class Antonym {
   @PrimaryColumn()
   id: string = IdGenerator.generate();
 
-  @Column({ name: 'value', nullable: false, length: 255 })
-  value: string = '';
+  @Column({ name: 'value', nullable: true, length: 255 })
+  value?: string;
 
   @ManyToOne(() => Definition, (definition) => definition.antonyms)
   definition?: Definition;

@@ -7,54 +7,50 @@ export class User {
   @PrimaryColumn()
   id: string = IdGenerator.generate();
 
-  @Column({ name: 'name', nullable: false, length: 127 })
+  @Column({ name: 'name', nullable: true, length: 127 })
   name: string = '';
 
-  @Column({ name: 'email', nullable: false, length: 63, unique: true })
+  @Column({ name: 'email', nullable: true, length: 63, unique: true })
   email: string = '';
 
-  @Column({ name: 'password', nullable: false })
+  @Column({ name: 'password', nullable: true })
   password: string = '';
 
   @ManyToMany(() => Entry)
   @JoinTable()
-  favorites: Entry[] = [];
+  favorites?: Entry[];
 
   @ManyToMany(() => Entry)
   @JoinTable()
-  history: Entry[] = [];
+  history?: Entry[];
 
   constructor(
     id: string,
-    email: string,
     name: string,
+    email: string,
     encodedPassword: string,
-    favorites: Entry[] = [],
-    history: Entry[] = [],
   ) {
     this.id = id;
-    this.email = email;
     this.name = name;
+    this.email = email;
     this.password = encodedPassword;
-    this.favorites = favorites;
-    this.history = history;
   }
 
   addToHistory(entry: Entry): boolean {
-    return this.history.push(entry) === 1;
+    return this.history?.push(entry) === 1;
   }
 
   addToFavorites(entry: Entry): boolean {
-    return this.favorites.push(entry) === 1;
+    return this.favorites?.push(entry) === 1;
   }
 
   removeFromFavorites(entry: Entry): boolean {
-    const index = this.favorites.findIndex((e) => e.id === entry.id);
+    const index = this.favorites?.findIndex((e) => e.id === entry.id);
 
-    if (index === -1) {
+    if (index === -1 || index === undefined) {
       return false;
     }
 
-    return this.favorites.splice(index, 1).length > 0;
+    return this.favorites!.splice(index, 1).length > 0;
   }
 }

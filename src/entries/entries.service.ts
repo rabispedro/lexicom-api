@@ -9,6 +9,7 @@ import { DictionaryApiRepository } from './disctionary-api.repository';
 import { SearchQueryDto } from 'src/shared/dto/search-query.dto';
 import { User } from 'src/user/entities/user.entity';
 import { SessionUser } from 'src/auth/entities/session-user.entity';
+import { IdGenerator } from 'src/shared/util/id-generator.util';
 
 @Injectable()
 export class EntriesService {
@@ -72,6 +73,8 @@ export class EntriesService {
 
     if (!entries || entries.length === 0) {
       entries = await this.dictionaryApiRepository.find(word);
+      entries.forEach((entry) => (entry.id = IdGenerator.generate()));
+
       await this.entriesRepository.save(entries);
     }
 

@@ -8,13 +8,13 @@ export class Meaning {
   @PrimaryColumn()
   id: string = IdGenerator.generate();
 
-  @Column({ name: 'partOfSpeech', nullable: false, length: 1023 })
-  partOfSpeech: string = '';
+  @Column({ name: 'partOfSpeech', nullable: true, length: 1023 })
+  partOfSpeech?: string;
 
   @OneToMany(() => Definition, (definition) => definition.meaning, {
     cascade: true,
   })
-  definitions: Definition[] = [];
+  definitions?: Definition[];
 
   @ManyToOne(() => Entry, (entry) => entry.meanings)
   entry?: Entry;

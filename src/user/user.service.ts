@@ -31,7 +31,7 @@ export class UserService {
     sessionUser: SessionUser,
   ): Promise<Page<EntryDto>> {
     const user = await this.userRepository.findOneBy({ id: sessionUser.id });
-    const favoriteIds = user!.favorites.map((favorite) => favorite.id);
+    const favoriteIds = user!.favorites?.map((favorite) => favorite.id) ?? [];
 
     const entries = await this.entriesRepository.findBy({
       id: In<string>(favoriteIds),
@@ -52,7 +52,7 @@ export class UserService {
     sessionUser: SessionUser,
   ): Promise<Page<EntryDto>> {
     const user = await this.userRepository.findOneBy({ id: sessionUser.id });
-    const historyIds = user!.favorites.map((history) => history.id);
+    const historyIds = user!.history?.map((history) => history.id) ?? [];
 
     const entries = await this.entriesRepository.findBy({
       id: In(historyIds),

@@ -16,6 +16,9 @@ export class DictionaryApiRepository {
       throw new BadRequestException('Entry does not exists');
     }
 
-    return (await httpEntry.json()) as Entry[];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const httpBody = await httpEntry.json();
+
+    return httpBody as Entry[];
   }
 }

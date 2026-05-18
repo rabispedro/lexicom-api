@@ -6,9 +6,9 @@ export class License {
   @PrimaryColumn()
   id: string = IdGenerator.generate();
 
-  @Column({ name: 'name', nullable: false, length: 31 })
-  name: string = '';
+  @Column({ name: 'name', nullable: true, length: 31 })
+  name?: string;
 
-  @Column({ name: 'url', nullable: false, length: 255 })
-  url: string = '';
+  @Column({ name: 'url', nullable: true, length: 255 })
+  url?: string;
 }

@@ -1,4 +1,3 @@
-import { SignUpDto } from 'src/auth/dto/sign-up.dto';
 import { IdGenerator } from 'src/shared/util/id-generator.util';
 import { User } from 'src/user/entities/user.entity';
 import { Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
@@ -14,13 +13,7 @@ export class SessionUser {
   @JoinColumn()
   user?: User;
 
-  constructor(requestBody: SignUpDto, encodedPassword: string) {
+  constructor() {
     this.id = IdGenerator.generate();
-    this.user = new User(
-      this.id,
-      requestBody.email,
-      requestBody.name,
-      encodedPassword,
-    );
   }
 }

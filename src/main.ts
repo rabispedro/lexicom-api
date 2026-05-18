@@ -18,7 +18,9 @@ async function bootstrap() {
   const swaggerDocumentFactory = () =>
     SwaggerModule.createDocument(app, swaggerConfig);
 
-  SwaggerModule.setup('docs', app, swaggerDocumentFactory);
+  SwaggerModule.setup('docs', app, swaggerDocumentFactory, {
+    jsonDocumentUrl: '/docs-json',
+  });
 
   app.use(helmet());
 
