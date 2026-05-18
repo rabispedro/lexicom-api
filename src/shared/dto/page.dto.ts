@@ -3,15 +3,20 @@ export class Page<T> {
   totalDocs: number = -1;
   previous?: string = '';
   next?: string = '';
-  hasNext: boolean = false;
-  hasPrev: boolean = false;
+  hasNext?: boolean = false;
+  hasPrev?: boolean = false;
 
-  constructor(entries: T[], totalSize: number, cursor?: string) {
+  constructor(
+    entries: T[],
+    totalSize: number,
+    next?: string,
+    previous?: string,
+  ) {
     this.results = entries;
     this.totalDocs = totalSize;
-    this.previous = cursor;
-    this.next = cursor;
-    this.hasNext = cursor !== null;
-    this.hasPrev = cursor !== entries[0];
+    this.previous = previous;
+    this.next = next;
+    this.hasNext = !!next;
+    this.hasPrev = !!previous;
   }
 }

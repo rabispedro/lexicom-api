@@ -21,7 +21,13 @@ export class UserService {
   ) {}
 
   async findMe(sessionUser: SessionUser): Promise<UserProfileDto> {
-    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    const user = await this.userRepository.findOne({
+      relations: {
+        favorites: true,
+        history: true,
+      },
+      where: { id: sessionUser.id },
+    });
     return new UserProfileDto(user!);
   }
 
@@ -38,8 +44,6 @@ export class UserService {
     });
     const favoriteIds = user!.favorites?.map((favorite) => favorite.id) ?? [];
 
-    console.info('Favorites:', favoriteIds);
-
     const entries = await this.entriesRepository.findBy({
       id: In<string>(favoriteIds),
     });
@@ -50,7 +54,7 @@ export class UserService {
 
     const responseDto = entries.map((entry) => new EntryDto(entry));
 
-    return new Page<EntryDto>(responseDto, totalItems, paginationQuery.cursor);
+    return new Page<EntryDto>(responseDto, totalItems);
   }
 
   async findMyHistory(
@@ -68,9 +72,6 @@ export class UserService {
     });
     const historyIds = user!.history?.map((history) => history.id) ?? [];
 
-    console.info('History:', historyIds);
-
-
     const entries = await this.entriesRepository.findBy({
       id: In(historyIds),
     });
@@ -81,6 +82,6 @@ export class UserService {
 
     const responseDto = entries.map((entry) => new EntryDto(entry));
 
-    return new Page<EntryDto>(responseDto, totalItems, paginationQuery.cursor);
+    return new Page<EntryDto>(responseDto, totalItems);
   }
 }

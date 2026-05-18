@@ -30,7 +30,7 @@ export class EntriesService {
     const queryBuilder = this.entriesRepository
       .createQueryBuilder('entry')
       .orderBy('entry.word', 'ASC')
-      .limit(paginationQuery.limit! + 1);
+      .limit((paginationQuery.limit ?? 10) + 1);
 
     if (paginationQuery.cursor) {
       queryBuilder.where('entry.word < :cursor', {
@@ -46,14 +46,18 @@ export class EntriesService {
 
     const totalItems = await this.entriesRepository.count();
 
-    const hasNextPage = entries.length > paginationQuery.limit!;
+    const hasNextPage = entries.length > (paginationQuery.limit ?? 10);
+    let next: string | undefined = undefined;
+    const previous = entries.at(0)!.id;
+
     if (hasNextPage) {
+      next = entries.at(-1)!.id;
       entries.pop();
     }
 
     const responseDto = entries.map((entry) => new EntryDto(entry));
 
-    return new Page<EntryDto>(responseDto, totalItems, paginationQuery.cursor);
+    return new Page<EntryDto>(responseDto, totalItems, next, previous);
   }
 
   async findTop(): Promise<Page<EntryDto>> {
@@ -75,6 +79,9 @@ export class EntriesService {
       entries = await this.dictionaryApiRepository.find(word);
       entries.forEach((entry) => {
         entry.id = IdGenerator.generate();
+        entry.accessed = () => {
+          entry.accesses += 1;
+        };
         entry.meanings?.forEach((meaning) => {
           meaning.id = IdGenerator.generate();
           meaning.definitions?.forEach((definition) => {
@@ -100,7 +107,15 @@ export class EntriesService {
 
       await this.entriesRepository.save(entries);
 
-      const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+      const user = await this.userRepository.findOne({
+        relations: {
+          history: true,
+        },
+        where: { id: sessionUser.id },
+      });
+
+      console.log('User', user);
+
       entries.forEach((entry) => user!.addToHistory(entry));
       await this.userRepository.save(user!);
     }
@@ -120,11 +135,14 @@ export class EntriesService {
       throw new BadRequestException('Entry not found');
     }
 
-    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    const user = await this.userRepository.findOne({
+      relations: {
+        favorites: true,
+      },
+      where: { id: sessionUser.id },
+    });
     user!.addToFavorites(entry);
     await this.userRepository.save(user!);
-
-    console.info('User', user);
   }
 
   async unfavorite(word: string, sessionUser: SessionUser): Promise<void> {
@@ -134,7 +152,12 @@ export class EntriesService {
       throw new BadRequestException('Entry not found');
     }
 
-    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    const user = await this.userRepository.findOne({
+      relations: {
+        favorites: true,
+      },
+      where: { id: sessionUser.id },
+    });
     user!.removeFromFavorites(entry);
     await this.userRepository.save(user!);
   }

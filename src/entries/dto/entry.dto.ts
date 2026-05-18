@@ -15,6 +15,7 @@ export class EntryDto {
   sourceUrls?: string[] = [];
 
   constructor(entry: Entry) {
+    this.id = entry.id;
     this.word = entry.word;
     this.phonetic = entry.phonetic;
     this.phonetics = entry.phonetics?.map(
