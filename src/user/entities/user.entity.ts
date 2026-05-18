@@ -16,23 +16,25 @@ export class User {
   @Column({ name: 'password', nullable: false })
   password: string = '';
 
-  @ManyToMany()
+  @ManyToMany(() => Entry)
   @JoinTable()
   favorites: Entry[] = [];
 
-  @ManyToMany()
+  @ManyToMany(() => Entry)
   @JoinTable()
   history: Entry[] = [];
 
   constructor(
     id: string,
     email: string,
+    name: string,
     encodedPassword: string,
     favorites: Entry[] = [],
     history: Entry[] = [],
   ) {
     this.id = id;
     this.email = email;
+    this.name = name;
     this.password = encodedPassword;
     this.favorites = favorites;
     this.history = history;

@@ -1,24 +1,31 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
-import { BriefEntryDto } from './dto/brief-entry.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Page } from 'src/shared/dto/page.dto';
 import { EntryDto } from './dto/entry.dto';
-import { SearchQueryDto } from './dto/search-query.dto';
 import { Entry } from './entities/entry.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CursorDto } from 'src/shared/dto/cursor.dto';
+import { DictionaryApiRepository } from './disctionary-api.repository';
+import { SearchQueryDto } from 'src/shared/dto/search-query.dto';
+import { User } from 'src/user/entities/user.entity';
+import { SessionUser } from 'src/auth/entities/session-user.entity';
 
 @Injectable()
 export class EntriesService {
   constructor(
     @InjectRepository(Entry)
     private readonly entriesRepository: Repository<Entry>,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+
+    private readonly dictionaryApiRepository: DictionaryApiRepository,
   ) {}
 
   async findAll(
     requestQuery: SearchQueryDto,
     paginationQuery: CursorDto,
-  ): Promise<Page<BriefEntryDto>> {
+  ): Promise<Page<EntryDto>> {
     const queryBuilder = this.entriesRepository
       .createQueryBuilder('entry')
       .orderBy('entry.word', 'ASC')
@@ -36,84 +43,65 @@ export class EntriesService {
       throw new BadRequestException('Not found');
     }
 
+    const totalItems = await this.entriesRepository.count();
+
     const hasNextPage = entries.length > paginationQuery.limit!;
     if (hasNextPage) {
       entries.pop();
     }
 
-    return new Page<BriefEntryDto>(entries);
+    const responseDto = entries.map((entry) => new EntryDto(entry));
+
+    return new Page<EntryDto>(responseDto, totalItems, paginationQuery.cursor);
   }
 
-  async findTop(): Promise<Page<BriefEntryDto>> {
+  async findTop(): Promise<Page<EntryDto>> {
     const entries = await this.entriesRepository.find({
-      order: { word: 'ASC' },
+      order: { accesses: 'DESC', word: 'ASC' },
       take: 10,
     });
 
-    entries = (await httpEntry.json()) as Entry[];
+    const responseDto = entries.map((entry) => new EntryDto(entry));
+    const totalItems = await this.entriesRepository.count();
+
+    return new Page(responseDto, totalItems, undefined);
   }
 
-  async findOne(word: string): Promise<EntryDto> {
-    const entry = await this.entriesRepository.findOneBy({ word: word });
+  async findOne(word: string): Promise<EntryDto[]> {
+    let entries = await this.entriesRepository.findBy({ word: word });
 
-    if (entry === null) {
-      const httpEntry = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
-        {
-          method: 'GET',
-          mode: 'no-cors',
-        },
-      );
-
-      if (httpEntry.status !== HttpStatus.OK.valueOf()) {
-        throw new BadRequestException('Entry does not exists');
-      }
+    if (!entries || entries.length === 0) {
+      entries = await this.dictionaryApiRepository.find(word);
+      await this.entriesRepository.save(entries);
     }
 
-    return new EntryDto(entry!);
+    const responseDto = entries.map((entry) => new EntryDto(entry));
+
+    entries.forEach((entry) => entry.accessed());
+    await this.entriesRepository.save(entries);
+
+    return responseDto;
   }
 
-  async favorite(word: string): Promise<void> {
-    const entry = await this.entriesRepository.findOneBy({ word: word });
+  async favorite(id: string, sessionUser: SessionUser): Promise<void> {
+    const entry = await this.entriesRepository.findOneBy({ id: id });
 
-    if (entry === null) {
-      const httpEntry = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
-        {
-          method: 'GET',
-          mode: 'no-cors',
-        },
-      );
-
-      if (httpEntry.status !== HttpStatus.OK.valueOf()) {
-        throw new BadRequestException('Entry does not exists');
-      }
+    if (!entry) {
+      throw new BadRequestException('Entry not found');
     }
 
-    if (entry === null) {
-      throw new BadRequestException('Not found');
-    }
+    sessionUser.user!.addToFavorites(entry);
+    await this.userRepository.save(sessionUser.user!);
   }
 
-  async unfavorite(word: string): Promise<void> {
-    const entry = await this.entriesRepository.findOneBy({ word: word });
+  async unfavorite(id: string, sessionUser: SessionUser): Promise<void> {
+    const entry = await this.entriesRepository.findOneBy({ id: id });
 
-    if (entry === null) {
-      const httpEntry = await fetch(
-        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`,
-        {
-          method: 'GET',
-          mode: 'no-cors',
-        },
-      );
-
-      if (httpEntry.status !== HttpStatus.OK.valueOf()) {
-        throw new BadRequestException('Entry does not exists');
-      }
+    if (!entry) {
+      throw new BadRequestException('Entry not found');
     }
 
-    if (entry === null) {
-      throw new BadRequestException('Not found');
-    }
+    sessionUser.user!.removeFromFavorites(entry);
+    await this.userRepository.save(sessionUser.user!);
   }
 }

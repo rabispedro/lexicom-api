@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { EntriesModule } from './entries/entries.module';
 import { UserModule } from './user/user.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './shared/guard/auth.guard';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -28,15 +28,16 @@ import { SessionUser } from './auth/entities/session-user.entity';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.SQL_HOST,
-      port: Number(process.env.SQL_PORT) ?? 5432,
-      username: process.env.SQL_USER,
-      password: process.env.SQL_PASSWORD,
-      database: process.env.SQL_DB,
+      host: process.env.SQL_HOST ?? 'localhost',
+      port: Number(process.env.SQL_PORT) ?? 5444,
+      username: process.env.SQL_USER ?? 'lexicom_user',
+      password: process.env.SQL_PASSWORD ?? 'Lex1C0M_S3CR3T_P4SSW0RD',
+      database: process.env.SQL_DB ?? 'lexicom_db',
       entities: [SessionUser, Entry, User],
       autoLoadEntities: true,
-      migrations: [`../migrations/*{.js,.ts}`],
-      migrationsRun: true,
+      synchronize: true,
+      // migrations: [`../migrations/*{.js,.ts}`],
+      // migrationsRun: true,
     }),
   ],
   controllers: [AppController],
@@ -49,6 +50,10 @@ import { SessionUser } from './auth/entities/session-user.entity';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
     },
   ],
 })

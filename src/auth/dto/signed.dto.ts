@@ -13,7 +13,7 @@ export class SignedDto {
 
   constructor(sessionUser: SessionUser, token: string) {
     this.id = sessionUser.user!.id;
-    this.name = sessionUser.name;
+    this.name = sessionUser.user!.name;
     this.token = token;
   }
 }

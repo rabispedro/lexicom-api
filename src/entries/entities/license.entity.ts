@@ -1,9 +1,14 @@
 import { IdGenerator } from 'src/shared/util/id-generator.util';
-import { Entity } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('license')
 export class License {
+  @PrimaryColumn()
   id: string = IdGenerator.generate();
+
+  @Column({ name: 'name', nullable: false, length: 31 })
   name: string = '';
+
+  @Column({ name: 'url', nullable: false, length: 255 })
   url: string = '';
 }

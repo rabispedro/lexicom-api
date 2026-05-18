@@ -1,8 +1,9 @@
 import { License } from './license.entity';
-import { Column, Entity, JoinColumn, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 import { Meaning } from './meaning.entity';
 import { Phonetic } from './phonetic.entity';
 import { IdGenerator } from 'src/shared/util/id-generator.util';
+import { SourceUrl } from './source-url.entity';
 
 @Entity('entry')
 export class Entry {
@@ -11,21 +12,35 @@ export class Entry {
 
   @Column()
   word: string = '';
-  
+
   @Column()
   phonetic: string = '';
-  
-  @OneToMany()
-  @JoinColumn()
+
+  @OneToMany(() => Phonetic, (phonetic) => phonetic.entry, {
+    cascade: true,
+  })
   phonetics: Phonetic[] = [];
-  
+
   @Column()
   origin?: string;
 
+  @OneToMany(() => Meaning, (meaning) => meaning.entry, {
+    cascade: true,
+  })
   meanings?: Meaning[];
 
+  @OneToOne(() => License)
   licence?: License;
 
+  @OneToMany(() => SourceUrl, (sourceUrl) => sourceUrl.entry, {
+    cascade: true,
+  })
+  sourceUrls: SourceUrl[] = [];
 
-  sourceUrls: string[] = [];
+  @Column({ name: 'accesses', nullable: false })
+  accesses: number = 0;
+
+  accessed() {
+    this.accesses += 1;
+  }
 }

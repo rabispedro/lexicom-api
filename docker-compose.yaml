@@ -3,8 +3,11 @@ services:
     image: redis:7.2.5-alpine
     container_name: cache-redis-db
     restart: always
+    env_file:
+      - path: .env.docker
+        required: true
     ports:
-      - 6379:6379
+      - 6380:6379
     mem_limit: 512mb
     volumes:
       - ./compose/data/cache:/data
@@ -15,17 +18,39 @@ services:
     image: postgres:18-alpine3.22
     container_name: sql-postgre-db
     restart: always
+    env_file:
+      - path: .env.docker
+        required: true
     ports:
-      - 5432:5432
+      - 5444:5432
     mem_limit: 1Gb
     volumes:
       - ./compose/data/sql:/var/lib/postgres/data
-    environment:
-      - POSTGRES_DB=vivasabor
-      - POSTGRES_USER=viva-sabor
-      - POSTGRES_PASSWORD=Viva_Sabor@123
     networks:
       - localnet
+
+  # app:
+  #   build: .
+  #   container_name: app
+  #   restart: always
+  #   depends_on:
+  #     - cache-redis-db
+  #     - sql-postgre-db
+  #   env_file:
+  #     - path: .env.local
+  #       required: true
+  #   ports:
+  #     - ${API_PORT}:3333
+  #   mem_limit: 2Gb
+  #   # volumes:
+  #   #   - ./compose/data/app:/var/lib/postgres/data
+  #   environment:
+  #     - FRONTEND_ORIGIN=${FRONTEND_ORIGIN}
+  #     - ENCRYPT_SALT=${ENCRYPT_SALT}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+  #   networks:
+  #     - localnet
 
 networks:
   localnet:
