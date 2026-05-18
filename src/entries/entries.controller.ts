@@ -34,8 +34,11 @@ export class EntriesController {
   }
 
   @Get('/en/:word')
-  async findOne(@Param('word') word: string): Promise<EntryDto[]> {
-    return await this.entriesService.findOne(word);
+  async findOne(@Req() req, @Param('word') word: string): Promise<EntryDto[]> {
+    return await this.entriesService.findOne(
+      word,
+      req.session_user as SessionUser,
+    );
   }
 
   @Post('/en/:word/favorite')

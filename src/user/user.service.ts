@@ -30,8 +30,15 @@ export class UserService {
     paginationQuery: CursorDto,
     sessionUser: SessionUser,
   ): Promise<Page<EntryDto>> {
-    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    const user = await this.userRepository.findOne({
+      relations: {
+        favorites: true,
+      },
+      where: { id: sessionUser.id },
+    });
     const favoriteIds = user!.favorites?.map((favorite) => favorite.id) ?? [];
+
+    console.info('Favorites:', favoriteIds);
 
     const entries = await this.entriesRepository.findBy({
       id: In<string>(favoriteIds),
@@ -51,8 +58,18 @@ export class UserService {
     paginationQuery: CursorDto,
     sessionUser: SessionUser,
   ): Promise<Page<EntryDto>> {
-    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    const user = await this.userRepository.findOne({
+      relations: {
+        history: true,
+      },
+      where: {
+        id: sessionUser.id,
+      },
+    });
     const historyIds = user!.history?.map((history) => history.id) ?? [];
+
+    console.info('History:', historyIds);
+
 
     const entries = await this.entriesRepository.findBy({
       id: In(historyIds),

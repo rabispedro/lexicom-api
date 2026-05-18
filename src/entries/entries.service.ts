@@ -68,14 +68,41 @@ export class EntriesService {
     return new Page(responseDto, totalItems, undefined);
   }
 
-  async findOne(word: string): Promise<EntryDto[]> {
+  async findOne(word: string, sessionUser: SessionUser): Promise<EntryDto[]> {
     let entries = await this.entriesRepository.findBy({ word: word });
 
     if (!entries || entries.length === 0) {
       entries = await this.dictionaryApiRepository.find(word);
-      entries.forEach((entry) => (entry.id = IdGenerator.generate()));
+      entries.forEach((entry) => {
+        entry.id = IdGenerator.generate();
+        entry.meanings?.forEach((meaning) => {
+          meaning.id = IdGenerator.generate();
+          meaning.definitions?.forEach((definition) => {
+            definition.id = IdGenerator.generate();
+            definition.antonyms?.forEach(
+              (antonym) => (antonym.id = IdGenerator.generate()),
+            );
+            definition.synonyms?.forEach(
+              (synonym) => (synonym.id = IdGenerator.generate()),
+            );
+          });
+        });
+        entry.phonetics?.forEach((phonetic) => {
+          phonetic.id = IdGenerator.generate();
+          if (phonetic.licence) {
+            phonetic.licence.id = IdGenerator.generate();
+          }
+        });
+        // entry.sourceUrls?.forEach(
+        //   (sourceUrl) => (sourceUrl.id = IdGenerator.generate()),
+        // );
+      });
 
       await this.entriesRepository.save(entries);
+
+      const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+      entries.forEach((entry) => user!.addToHistory(entry));
+      await this.userRepository.save(user!);
     }
 
     const responseDto = entries.map((entry) => new EntryDto(entry));
@@ -86,25 +113,29 @@ export class EntriesService {
     return responseDto;
   }
 
-  async favorite(id: string, sessionUser: SessionUser): Promise<void> {
-    const entry = await this.entriesRepository.findOneBy({ id: id });
+  async favorite(word: string, sessionUser: SessionUser): Promise<void> {
+    const entry = await this.entriesRepository.findOneBy({ word: word });
 
     if (!entry) {
       throw new BadRequestException('Entry not found');
     }
 
-    sessionUser.user!.addToFavorites(entry);
-    await this.userRepository.save(sessionUser.user!);
+    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    user!.addToFavorites(entry);
+    await this.userRepository.save(user!);
+
+    console.info('User', user);
   }
 
-  async unfavorite(id: string, sessionUser: SessionUser): Promise<void> {
-    const entry = await this.entriesRepository.findOneBy({ id: id });
+  async unfavorite(word: string, sessionUser: SessionUser): Promise<void> {
+    const entry = await this.entriesRepository.findOneBy({ word: word });
 
     if (!entry) {
       throw new BadRequestException('Entry not found');
     }
 
-    sessionUser.user!.removeFromFavorites(entry);
-    await this.userRepository.save(sessionUser.user!);
+    const user = await this.userRepository.findOneBy({ id: sessionUser.id });
+    user!.removeFromFavorites(entry);
+    await this.userRepository.save(user!);
   }
 }

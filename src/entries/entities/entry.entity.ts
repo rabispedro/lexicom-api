@@ -22,7 +22,7 @@ export class Entry {
   phonetics?: Phonetic[];
 
   @Column()
-  origin?: string;
+  origin?: string = '';
 
   @OneToMany(() => Meaning, (meaning) => meaning.entry, {
     cascade: true,
@@ -40,7 +40,7 @@ export class Entry {
   @Column({ name: 'accesses', nullable: true })
   accesses: number = 0;
 
-  accessed() {
+  accessed = () => {
     this.accesses += 1;
-  }
+  };
 }

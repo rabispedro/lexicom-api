@@ -37,10 +37,12 @@ export class User {
   }
 
   addToHistory(entry: Entry): boolean {
+    this.history ??= [];
     return this.history?.push(entry) === 1;
   }
 
   addToFavorites(entry: Entry): boolean {
+    this.favorites ??= [];
     return this.favorites?.push(entry) === 1;
   }
 

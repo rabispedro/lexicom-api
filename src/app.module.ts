@@ -53,7 +53,7 @@ import { Synonym } from './entries/entities/synonym.entity';
         Synonym,
       ],
       autoLoadEntities: true,
-      synchronize: true,
+      // synchronize: true,
       // migrations: [`../migrations/*{.js,.ts}`],
       // migrationsRun: true,
     }),
